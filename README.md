@@ -1,0 +1,2 @@
+# Shranjan-detail
+detailed folders
