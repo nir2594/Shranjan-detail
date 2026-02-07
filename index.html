@@ -1,0 +1,298 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Heart, Stars, Music, Sparkles } from 'lucide-react';
+
+// --- Confetti Component ---
+const Confetti = () => {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    let animationFrameId;
+    let particles = [];
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    window.addEventListener('resize', resize);
+    resize();
+
+    const colors = ['#ff0000', '#ff69b4', '#ffd700', '#ff1493', '#00ff00', '#00bfff'];
+
+    class Particle {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height - canvas.height;
+        this.size = Math.random() * 10 + 5;
+        this.speedY = Math.random() * 3 + 2;
+        this.speedX = Math.random() * 2 - 1;
+        this.color = colors[Math.floor(Math.random() * colors.length)];
+        this.rotation = Math.random() * 360;
+        this.rotationSpeed = Math.random() * 5 - 2.5;
+      }
+
+      update() {
+        this.y += this.speedY;
+        this.x += this.speedX;
+        this.rotation += this.rotationSpeed;
+        if (this.y > canvas.height) {
+          this.y = -20;
+          this.x = Math.random() * canvas.width;
+        }
+      }
+
+      draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate((this.rotation * Math.PI) / 180);
+        ctx.fillStyle = this.color;
+        ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
+        ctx.restore();
+      }
+    }
+
+    // Initial burst
+    for (let i = 0; i < 150; i++) {
+      particles.push(new Particle());
+    }
+
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        p.update();
+        p.draw();
+      });
+      animationFrameId = requestAnimationFrame(animate);
+    };
+    animate();
+
+    return () => {
+      window.removeEventListener('resize', resize);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-50" />;
+};
+
+// --- Floating Hearts Background ---
+const FloatingHearts = () => {
+  return (
+    <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+      {[...Array(15)].map((_, i) => (
+        <div
+          key={i}
+          className="absolute animate-float opacity-30"
+          style={{
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+            animationDelay: `${Math.random() * 5}s`,
+            animationDuration: `${Math.random() * 10 + 10}s`,
+          }}
+        >
+          <Heart size={Math.random() * 40 + 20} color="#ff69b4" fill="#ff69b4" />
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default function App() {
+  const [accepted, setAccepted] = useState(false);
+  const [noBtnStyle, setNoBtnStyle] = useState({});
+  const [hoverCount, setHoverCount] = useState(0);
+  const [yesBtnScale, setYesBtnScale] = useState(1);
+
+  const moveNoButton = () => {
+    // Generate random coordinates within the viewport
+    // Using fixed positioning to ensure it stays visible on screen
+    const x = Math.random() * (window.innerWidth - 150);
+    const y = Math.random() * (window.innerHeight - 100);
+    
+    setNoBtnStyle({
+      position: 'fixed',
+      left: `${Math.max(20, x)}px`, // Keep some padding from edge
+      top: `${Math.max(20, y)}px`,
+      transition: 'all 0.2s ease', 
+      zIndex: 50,
+    });
+    setHoverCount(prev => prev + 1);
+    
+    // Grow the Yes button slightly every time, but cap it so it doesn't break the browser
+    setYesBtnScale(prev => Math.min(prev + 0.15, 6)); 
+  };
+
+  const getNoButtonText = () => {
+    const messages = [
+      "No",
+      "Are you sure?",
+      "नाही म्हणू नकोस!", // Don't say no!
+      "Really sure?",
+      "Sharddha apla porannchi shappat tula!", // The emotional blackmail!
+      "विचार कर एकदा!", // Think once!
+      "Think again!",
+      "Last chance!",
+      "असं नको करू ग!", // Don't do this (girl)!
+      "Surely not?",
+      "You might regret this!",
+      "परत विचार कर!", // Think again!
+      "Give it another thought!",
+      "Are you absolutely certain?",
+      "भाव नको खाऊ!", // Don't act pricey!
+      "This could be a mistake!",
+      "Have a heart!",
+      "हो म्हण ना!", // Say yes!
+      "Don't be so cold!",
+      "Change of heart?",
+      "माझं हृदय तुटेल!", // My heart will break!
+      "I wouldn't say no!",
+      "What about now?",
+      "PLEASE",
+      "खरंच नाही?", // Really no?
+      "PRETTY PLEASE",
+      "I'm going to die of sadness",
+      "अरे ऐक ना!", // Hey listen!
+      "Ok that's it",
+      "Just click YES already!",
+      "रुसली का?", // Are you angry?
+      "I am speed",
+      "You can't catch me!",
+      "नाही म्हणजे नाही?", // No means no?
+      "Stop chasing me!",
+      "Click the green one!",
+      "I'm getting tired...",
+      "Okay, I give up (jk)",
+      "Still chasing?",
+      "You're persistent!",
+      "त्रास नको देऊ!", // Don't trouble me!
+      "I'm fast as boi",
+      "Fine, catch me if you can!"
+    ];
+    return messages[Math.min(hoverCount, messages.length - 1)];
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-pink-100 via-red-100 to-pink-200 flex flex-col items-center justify-center p-4 overflow-hidden relative font-sans text-center">
+      {/* Background Ambience */}
+      <FloatingHearts />
+      <style>{`
+        @keyframes float {
+          0% { transform: translateY(0) rotate(0deg); }
+          50% { transform: translateY(-20px) rotate(10deg); }
+          100% { transform: translateY(0) rotate(0deg); }
+        }
+        .animate-float {
+          animation: float infinite ease-in-out;
+        }
+        @keyframes heartbeat {
+          0% { transform: scale(1); }
+          15% { transform: scale(1.1); }
+          30% { transform: scale(1); }
+          45% { transform: scale(1.1); }
+          60% { transform: scale(1); }
+        }
+        .animate-heartbeat {
+          animation: heartbeat 2s infinite;
+        }
+        .animate-bounce-in {
+          animation: bounceIn 1s cubic-bezier(0.215, 0.610, 0.355, 1.000) both;
+        }
+        @keyframes bounceIn {
+          0%, 20%, 40%, 60%, 80%, 100% { transition-timing-function: cubic-bezier(0.215, 0.610, 0.355, 1.000); }
+          0% { opacity: 0; transform: scale3d(.3, .3, .3); }
+          20% { transform: scale3d(1.1, 1.1, 1.1); }
+          40% { transform: scale3d(.9, .9, .9); }
+          60% { opacity: 1; transform: scale3d(1.03, 1.03, 1.03); }
+          80% { transform: scale3d(.97, .97, .97); }
+          100% { opacity: 1; transform: scale3d(1, 1, 1); }
+        }
+      `}</style>
+
+      {accepted ? (
+        // --- Success State ---
+        <div className="z-10 flex flex-col items-center animate-bounce-in">
+          <Confetti />
+          
+          <div className="relative mb-8">
+             <div className="absolute -top-12 -left-12 text-yellow-500 animate-spin-slow">
+               <Stars size={48} fill="currentColor" />
+             </div>
+             <div className="absolute -bottom-8 -right-8 text-yellow-500 animate-bounce">
+               <Sparkles size={40} fill="currentColor" />
+             </div>
+             
+             {/* Main Success GIF */}
+             <img 
+               src="https://media.tenor.com/gUiu1zyxfzYAAAAi/bear-kiss-bear-kisses.gif" 
+               alt="Happy Bears Kissing" 
+               className="rounded-3xl shadow-2xl border-4 border-white w-64 h-64 object-cover"
+             />
+          </div>
+
+          <h1 className="text-4xl md:text-6xl font-extrabold text-pink-600 mb-6 drop-shadow-sm">
+            YAYYY! I Knew It! 💖
+          </h1>
+          <p className="text-xl text-pink-800 mb-8 max-w-md">
+            Best decision ever, Shraddha! Get ready for the best Valentine's Day ever! 🥰
+          </p>
+
+          <button 
+            onClick={() => window.location.reload()}
+            className="bg-white text-pink-500 px-8 py-3 rounded-full font-bold shadow-lg hover:bg-pink-50 transition transform hover:scale-105"
+          >
+            Play Again
+          </button>
+        </div>
+      ) : (
+        // --- Question State ---
+        <div className="z-10 flex flex-col items-center max-w-2xl w-full">
+          {/* Main Cute Image */}
+          <div className="mb-8 relative group">
+            <div className="absolute inset-0 bg-pink-400 rounded-full blur-xl opacity-20 group-hover:opacity-40 transition duration-500"></div>
+            <img 
+              src="https://media.tenor.com/ftafHq2yvBAAAAAi/mocha-bear-hearts.gif"
+              alt="Cute Bear Asking" 
+              className="relative w-48 h-48 md:w-64 md:h-64 object-contain drop-shadow-xl animate-heartbeat"
+            />
+          </div>
+
+          <h1 className="text-3xl md:text-5xl font-bold text-gray-800 mb-4 px-4 leading-tight">
+            Shraddha... <span className="text-pink-600 inline-block transform hover:scale-110 transition">💖</span>
+          </h1>
+          <h2 className="text-xl md:text-3xl font-medium text-gray-700 mb-12">
+            Will you be my Valentine?
+          </h2>
+
+          <div className="flex flex-col md:flex-row items-center gap-6 md:gap-12 w-full justify-center relative min-h-[100px]">
+            {/* YES Button */}
+            <button
+              onClick={() => setAccepted(true)}
+              style={{ transform: `scale(${yesBtnScale})` }}
+              className="group relative bg-green-500 hover:bg-green-600 text-white text-xl md:text-2xl font-bold py-4 px-12 rounded-full shadow-lg transition-all duration-200 focus:outline-none ring-4 ring-green-500/30 z-10"
+            >
+              <span className="flex items-center gap-2">
+                YES <Heart className="w-6 h-6 fill-current animate-pulse" />
+              </span>
+              <div className="absolute inset-0 rounded-full bg-white opacity-0 group-hover:opacity-20 transition-opacity"></div>
+            </button>
+
+            {/* NO Button - The Runner */}
+            <button
+              style={noBtnStyle}
+              onMouseEnter={moveNoButton}
+              onClick={moveNoButton} /* Fallback for mobile tap */
+              className="bg-red-500 hover:bg-red-600 text-white text-lg md:text-xl font-bold py-4 px-8 rounded-full shadow-lg transition-colors focus:outline-none z-20 whitespace-nowrap"
+            >
+              {getNoButtonText()}
+            </button>
+          </div>
+          
+          <div className="mt-16 text-pink-300 text-sm font-light flex items-center gap-2">
+             <Music size={14} /> Made with love 
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
